@@ -39,7 +39,6 @@ const activePath = Astro.url.pathname;
     <header class="topbar">
       <a class="skip" href="#main">Skip to content</a>
       <a class="brand" href="/">Course navigator</a>
-      <span class="prototype-tag">Unofficial student prototype · fictional course data</span>
       <button
         type="button"
         class="nav-toggle"
@@ -47,8 +46,9 @@ const activePath = Astro.url.pathname;
         aria-expanded="false"
         aria-controls="site-nav"
       >
-        Navigation
+        Menu
       </button>
+      <span class="prototype-tag">Unofficial student prototype · fictional course data</span>
     </header>
 
     <div class="layout">
@@ -172,6 +172,9 @@ const activePath = Astro.url.pathname;
         const open = () => {
           document.body.dataset.navOpen = "";
           toggle.setAttribute("aria-expanded", "true");
+          // The drawer becomes visible in the same style recalculation, so
+          // focus can move into it now: a hidden element cannot take focus,
+          // and focus would otherwise stay behind on the button.
           (nav.querySelector("[data-nav-close]") || nav).focus();
         };
         const close = ({ restoreFocus = true } = {}) => {

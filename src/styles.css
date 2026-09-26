@@ -58,7 +58,8 @@ a:hover { text-decoration-thickness: 2px; }
 .topbar {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  flex-wrap: wrap;
+  gap: 0.45rem 1rem;
   padding: 0.6rem 1rem;
   background: var(--surface);
   border-bottom: 1px solid var(--line);
@@ -77,6 +78,8 @@ a:hover { text-decoration-thickness: 2px; }
 .skip:focus { left: 0.5rem; top: 0.5rem; z-index: 60; }
 
 .brand {
+  flex: none;
+  white-space: nowrap;
   font-weight: 650;
   font-size: 1.02rem;
   color: var(--ink);
@@ -86,6 +89,7 @@ a:hover { text-decoration-thickness: 2px; }
 .brand:hover { text-decoration: underline; }
 
 .prototype-tag {
+  flex: none;
   font-size: 0.78rem;
   color: var(--warn);
   background: var(--warn-soft);
@@ -97,6 +101,8 @@ a:hover { text-decoration-thickness: 2px; }
 
 .nav-toggle {
   display: none;
+  flex: none;
+  order: 3;
   margin-inline-start: auto;
   font: inherit;
   font-size: 0.9rem;
@@ -405,8 +411,8 @@ h3 { font-size: 1rem; margin: 1.3rem 0 0.4rem; }
   color: var(--ink);
 }
 .contents-list a:hover { background: var(--surface); }
-.contents-list .row-title { font-weight: 570; }
-.contents-list .row-summary { font-size: 0.87rem; color: var(--ink-faint); margin-top: 0.1rem; }
+.contents-list .row-title { display: block; font-weight: 570; }
+.contents-list .row-summary { display: block; font-size: 0.87rem; color: var(--ink-faint); margin-top: 0.1rem; }
 
 .tag {
   display: inline-block;
@@ -566,7 +572,8 @@ mark { background: #fff0b3; color: inherit; padding: 0 0.1em; }
   .layout { grid-template-columns: minmax(0, 1fr); }
   main { padding: 1.25rem 1rem 3rem; }
   .site-footer { padding-inline: 1rem; }
-  .nav-toggle { display: block; }
+  .nav-toggle { display: block; order: 2; }
+  .topbar .prototype-tag { order: 3; }
 
   /* With JavaScript, the outline becomes one labelled drawer. Without it the
      same markup stays in the document flow, so every link is still reachable. */
@@ -577,8 +584,12 @@ mark { background: #fff0b3; color: inherit; padding: 0 0.1em; }
     height: 100%;
     z-index: 50;
     transform: translateX(-100%);
+    /* Hidden, so a closed drawer is not in the tab order. Visibility is
+       switched instantly on open (below) and only after the slide on close —
+       transitioning it on open would leave the drawer unfocusable for the
+       length of the animation, and focus would stay behind on the button. */
     visibility: hidden;
-    transition: transform 0.18s ease, visibility 0.18s;
+    transition: transform 0.18s ease, visibility 0s linear 0.18s;
     box-shadow: 0 0 2rem rgba(0, 0, 0, 0.22);
     border-right: 1px solid var(--line);
     padding-top: 0.75rem;
@@ -586,6 +597,7 @@ mark { background: #fff0b3; color: inherit; padding: 0 0.1em; }
   html:not(.no-js) body[data-nav-open] .nav {
     transform: none;
     visibility: visible;
+    transition: transform 0.18s ease, visibility 0s;
   }
   html:not(.no-js) body[data-nav-open] .backdrop {
     display: block;

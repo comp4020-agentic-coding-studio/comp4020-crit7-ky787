@@ -30,12 +30,14 @@ const releasedBriefs = getVisibleItemsById(released.map((row) => row.assessment.
 const visited = recentVisits(visitorId, 4);
 const saved = listSaves(visitorId).slice(0, 4);
 const percent = (score: number, max: number) => Math.round((score / max) * 100);
+/** The first real paragraph of the feedback, unwrapped, as the preview. */
 const preview = (feedback: string) => {
-  const line = feedback
-    .split("\n")
-    .map((row) => row.trim())
-    .find((row) => row !== "" && !row.startsWith("#") && !row.startsWith("**"));
-  return line && line.length > 210 ? `${line.slice(0, 210).trimEnd()}…` : (line ?? "");
+  const paragraph = feedback
+    .split(/\n\s*\n/)
+    .map((block) => block.replace(/\s+/g, " ").trim())
+    .find((block) => block !== "" && !block.startsWith("#") && !block.startsWith("**"));
+  if (!paragraph) return "";
+  return paragraph.length > 200 ? `${paragraph.slice(0, 200).replace(/\s+\S*$/, "")}…` : paragraph;
 };
 ---
 

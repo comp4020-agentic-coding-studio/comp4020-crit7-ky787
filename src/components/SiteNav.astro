@@ -28,6 +28,11 @@ type Props = {
 
 const { outlines, activeCourseId, activeItemId, activePath, savedCount } = Astro.props;
 const here = (path: string) => (activePath === path ? "page" : undefined);
+
+// On a page that belongs to no course — Overview, Saved, Search — the first
+// course is still shown open. The argument this prototype makes is that the
+// outline is always there; hiding all of it by default would contradict it.
+const openCourseId = activeCourseId ?? outlines[0]?.course.id;
 ---
 
 <nav id="site-nav" class="nav" aria-label="Courses and pages" tabindex="-1">
@@ -53,6 +58,7 @@ const here = (path: string) => (activePath === path ? "page" : undefined);
     {
       outlines.map(({ course, groups, count }) => {
         const isActive = course.id === activeCourseId;
+        const isOpen = course.id === openCourseId;
         const panelId = `outline-${course.id}`;
         return (
           <li>
@@ -68,17 +74,17 @@ const here = (path: string) => (activePath === path ? "page" : undefined);
               <button
                 type="button"
                 class="disclosure"
-                aria-expanded={isActive ? "true" : "false"}
+                aria-expanded={isOpen ? "true" : "false"}
                 aria-controls={panelId}
                 data-disclosure={`course:${course.id}`}
-                data-default={isActive ? "open" : "closed"}
+                data-default={isOpen ? "open" : "closed"}
               >
                 <span class="visually-hidden">Outline for {course.title}</span>
                 <Chevron />
               </button>
             </div>
 
-            <div class="outline" id={panelId} hidden={!isActive}>
+            <div class="outline" id={panelId} hidden={!isOpen}>
               <ul>
                 {groups.map((group) => {
                   const groupPanelId = `g-${course.id}-${group.id.split(":").at(-1)}`;
