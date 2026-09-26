@@ -2,8 +2,8 @@
 title: Assessment overview
 summary: Four pieces of assessment, what each one asks for, and the one criterion they share.
 kind: page
-section: info
-position: 20
+section: assessment
+position: 5
 source: Reused — weights, criteria and submission rules from comp4020-ass2-Ky787 (src/content/assessments/*.mdx)
 ---
 

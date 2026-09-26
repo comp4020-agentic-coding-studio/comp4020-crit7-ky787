@@ -23,9 +23,10 @@ export type SeedCourse = {
   breakAfterWeek: number;
   breakWeeks: number;
   position: number;
-  /** Section key -> title. "info" is the course-information group; "wNN" a week.
-   *  There is no key for "Other course resources": that group is derived. */
-  sections: { key: string; title: string; week?: number }[];
+  /** The course's ordered sections. A section with a `week` is a teaching
+   *  week; otherwise `kind` says which of the fixed groups it is. There is no
+   *  key for "Other course resources": that group is derived. */
+  sections: { key: string; title: string; week?: number; kind?: "info" | "assessment" }[];
 };
 
 export type SeedAssessment = {
@@ -71,7 +72,8 @@ export const courses: SeedCourse[] = [
     breakWeeks: 2,
     position: 1,
     sections: [
-      { key: "info", title: "Course information" },
+      { key: "info", title: "Course information", kind: "info" },
+      { key: "assessment", title: "Assessment", kind: "assessment" },
       ...weekSections([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
     ],
   },
@@ -87,8 +89,9 @@ export const courses: SeedCourse[] = [
     breakWeeks: 2,
     position: 2,
     sections: [
-      { key: "info", title: "Course information" },
-      ...weekSections([5, 7, 8, 9, 12]),
+      { key: "info", title: "Course information", kind: "info" },
+      { key: "assessment", title: "Assessment", kind: "assessment" },
+      ...weekSections([7, 8, 9]),
     ],
   },
 ];

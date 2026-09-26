@@ -27,7 +27,7 @@ export const FALLBACK_GROUP_TITLE = "Other course resources";
 export type OutlineGroup = {
   /** Stable anchor id, used for in-page links and the expansion state key. */
   id: string;
-  kind: "info" | "week" | "other";
+  kind: "info" | "assessment" | "week" | "other";
   title: string;
   week: number | null;
   items: Item[];
@@ -38,7 +38,10 @@ export function isVisible(item: Pick<Item, "published">): boolean {
   return item.published === 1;
 }
 
-const SECTION_KIND_RANK = { info: 0, week: 1 } as const;
+// What a student wants near the top of a course: what the course is, then
+// what they are being marked on, then the teaching weeks in order. The
+// derived fallback group always comes after all three.
+const SECTION_KIND_RANK = { info: 0, assessment: 1, week: 2 } as const;
 
 function bySectionOrder(a: Section, b: Section): number {
   return (

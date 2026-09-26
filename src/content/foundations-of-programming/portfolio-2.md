@@ -2,7 +2,7 @@
 title: "Portfolio 2 — Structure and data"
 summary: Three programs from weeks 6 to 9, one of which must be a refactor of something you wrote earlier.
 kind: assessment
-section: w09
+section: assessment
 position: 20
 source: Newly written demonstration material for this prototype
 ---

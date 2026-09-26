@@ -19,6 +19,7 @@ export type ContentRecord = {
   title: string;
   kind: string;
   section: string | null;
+  position: number;
   published: boolean;
 };
 
@@ -39,6 +40,7 @@ export function contentRecords(): ContentRecord[] {
             title: String(data.title ?? ""),
             kind: String(data.kind ?? ""),
             section: typeof data.section === "string" ? data.section : null,
+            position: typeof data.position === "number" ? data.position : 0,
             published: data.published !== false,
           };
         }),

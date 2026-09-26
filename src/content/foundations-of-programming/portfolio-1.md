@@ -2,7 +2,7 @@
 title: "Portfolio 1 — Expressions and decisions"
 summary: Four short programs, each with a paragraph explaining what you expected and what actually happened.
 kind: assessment
-section: w05
+section: assessment
 position: 10
 source: Newly written demonstration material for this prototype
 ---

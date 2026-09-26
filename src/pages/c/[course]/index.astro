@@ -121,6 +121,5 @@ const anchorOf = (groupId: string) => groupId.split(":").at(-1) ?? groupId;
     font-size: 0.8rem;
   }
   .contents-group details:not([open]) > summary::before { content: "▸"; }
-  .contents-group summary h2 { display: inline-flex; }
   .contents-group summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 </style>

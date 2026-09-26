@@ -2,8 +2,8 @@
 title: "Final project — A small working program"
 summary: One program of your own choosing, with a test plan and an account of one bug you fixed.
 kind: assessment
-section: w12
-position: 10
+section: assessment
+position: 30
 source: Newly written demonstration material for this prototype
 ---
 

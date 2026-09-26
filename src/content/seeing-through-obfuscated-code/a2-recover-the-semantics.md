@@ -2,7 +2,7 @@
 title: "A2 — Recover the semantics"
 summary: Given a flattened or gated function, a recovered graph and a set of solver results, decide what has been established — and defend the boundary you draw.
 kind: assessment
-section: w09
+section: assessment
 position: 30
 source: Reused — brief, rubric and spec lines from comp4020-ass2-Ky787 (src/content/assessments/a2-recover-the-semantics.mdx)
 ---

@@ -37,10 +37,10 @@ export const courses = sqliteTable("courses", {
 
 /**
  * One ordered part of a course outline. `kind` fixes where the part sits:
- * course information first, then the teaching weeks. There is deliberately no
- * row for "Other course resources" — that group is derived from items with no
- * section, so a resource cannot be left out of the outline by forgetting to
- * file it (see src/lib/outline.ts).
+ * course information first, then assessment, then the teaching weeks. There is
+ * deliberately no row for "Other course resources" — that group is derived
+ * from items with no section, so a resource cannot be left out of the outline
+ * by forgetting to file it (see src/lib/outline.ts).
  */
 export const sections = sqliteTable(
   "sections",
@@ -49,7 +49,7 @@ export const sections = sqliteTable(
     courseId: text("course_id")
       .notNull()
       .references(() => courses.id),
-    kind: text({ enum: ["info", "week"] }).notNull(),
+    kind: text({ enum: ["info", "assessment", "week"] }).notNull(),
     title: text().notNull(),
     week: int(),
     position: int().notNull().default(0),

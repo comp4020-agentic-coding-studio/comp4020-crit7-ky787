@@ -2,8 +2,8 @@
 title: "Capstone — Seeing through an unfamiliar binary"
 summary: One sample, withheld identity, every method you have. Choose an approach, justify it, validate whatever you conclude, and state the boundary of your own result.
 kind: assessment
-section: w12
-position: 20
+section: assessment
+position: 40
 source: Reused — brief, rubric and spec lines from comp4020-ass2-Ky787 (src/content/assessments/capstone-unfamiliar-binary.mdx)
 ---
 

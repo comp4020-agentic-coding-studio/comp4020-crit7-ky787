@@ -109,6 +109,14 @@ These are settled. Change them deliberately, not incidentally.
   add a second list of resources, in any component, for any reason.
 - "Other course resources" is derived from `section_id IS NULL`, not seeded as
   a row. Do not give it a row: the point is that it cannot be forgotten.
+- Group order is fixed by `SECTION_KIND_RANK` in `src/lib/outline.ts`:
+  information, assessment, weeks, then the derived fallback. A section's
+  `position` orders within a kind, never across kinds.
+- Every assessment brief belongs to the `assessment` section, not to the week
+  it was set in. A brief filed in a week is the failure the group prevents.
+- The footer lives in the content column of the `.layout` grid, never across
+  the full page width. A full-width footer cuts the navigation column off at
+  the bottom of a long page and hides the last few groups.
 - `isVisible` and `results.released` are the only two visibility switches, and
   every route consults them. A new route that reads content or marks consults
   them too.

@@ -2,7 +2,7 @@
 title: "Week 6 evidence audit"
 summary: "A short marked exercise: take three published claims about this corpus and say, for each, exactly what evidence would settle it."
 kind: assessment
-section: w06
+section: assessment
 position: 20
 source: Newly written demonstration material for this prototype, using the claim-boundary discipline from comp4020-ass2-Ky787 (src/pages/claims/index.astro)
 ---

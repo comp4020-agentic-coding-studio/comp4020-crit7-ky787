@@ -55,6 +55,11 @@ an unpublished resource is not merely hidden from a list — it has no page.
 Released feedback works the same way: an unreleased mark is in the database and
 reachable from nowhere.
 
+**Assessment in one place.** Every brief is filed under an *Assessment* group
+rather than in the teaching week it was set in, so finding what you are marked
+on does not depend on remembering which week that was. It is an ordinary
+section kind, ordered by the same rule as the rest of the outline.
+
 **URLs that survive being reorganised.** A resource lives at
 `/c/<course>/<slug>/`. Reordering changes a `position` column; it never touches
 an address. A save, a bookmark and a cross-link all keep working.
@@ -88,8 +93,10 @@ Enforced by `spec/`:
 
 - the outline lists exactly the visible content records, by identifier and not
   by count, with no duplicates — and the navigation agrees with it;
-- every sectionless resource appears in *Other course resources*, and that
-  group comes last;
+- the groups come in a fixed order — Course information, Assessment, the
+  teaching weeks in order, then *Other course resources* last;
+- every sectionless resource appears in *Other course resources*, and every
+  assessment brief appears under *Assessment*, in the order it falls due;
 - reordering changes order and nothing else, including URLs;
 - an item whose section has moved away is not orphaned;
 - unpublished resources and unreleased feedback are absent from the outline,

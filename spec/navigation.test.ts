@@ -76,12 +76,45 @@ for (const courseId of courseIds()) {
       expect(listed).toEqual(unfiled);
     });
 
-    it("puts the fallback group last, after the weeks", () => {
+    it("orders the groups: information, assessment, weeks, then the fallback", () => {
       const titles = [...contents.querySelectorAll(".contents-group h2")].map(
-        (node) => node.textContent?.trim().split("\n")[0] ?? "",
+        (node) => node.textContent?.replace(/\s+/g, " ").trim() ?? "",
       );
-      expect(titles.at(-1)).toContain("Other course resources");
       expect(titles[0]).toContain("Course information");
+      expect(titles[1]).toContain("Assessment");
+      expect(titles.at(-1)).toContain("Other course resources");
+
+      const weeks = titles
+        .filter((title) => /^Week \d+/.test(title))
+        .map((title) => Number(title.match(/^Week (\d+)/)?.[1]));
+      expect(weeks).toEqual([...weeks].sort((a, b) => (a ?? 0) - (b ?? 0)));
+      expect(weeks.length).toBeGreaterThan(0);
+    });
+
+    it("gathers every assessment brief under Assessment, in due order", () => {
+      const group = [...contents.querySelectorAll(".contents-group")].find((node) =>
+        node.querySelector("h2")?.textContent?.trim().startsWith("Assessment"),
+      );
+      expect(group, "each course needs an Assessment group").toBeTruthy();
+
+      const listed = [...(group?.querySelectorAll<HTMLAnchorElement>(".contents-list a") ?? [])].map(
+        (a) => (a.getAttribute("href") ?? "").replace(`/c/${courseId}/`, "").replace(/\/$/, ""),
+      );
+      const briefs = visibleIn(courseId).filter((record) => record.kind === "assessment");
+      expect(briefs.length).toBeGreaterThan(1);
+      for (const brief of briefs) expect(listed).toContain(brief.slug);
+
+      // and none is left behind in a teaching week, which is the failure this
+      // grouping exists to prevent: an assessment you can only find by
+      // remembering which week it was set in.
+      expect(
+        visibleIn(courseId).filter((r) => r.kind === "assessment" && r.section !== "assessment"),
+      ).toEqual([]);
+
+      // and the group reads in the order the records give it — for these
+      // courses, the order the assessment falls due
+      const byDue = [...briefs].sort((a, b) => a.position - b.position).map((b) => b.slug);
+      expect(listed.filter((slug) => byDue.includes(slug))).toEqual(byDue);
     });
   });
 }

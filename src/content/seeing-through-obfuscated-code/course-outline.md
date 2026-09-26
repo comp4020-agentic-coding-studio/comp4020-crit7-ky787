@@ -44,7 +44,9 @@ Three sentences you will write all semester:
 
 ## Where things live
 
-The teaching weeks are listed in order in this course's contents. Reference
-material that does not belong to any one week — the terminology, the claim
-boundaries, the tool catalogue — sits under **Other course resources**, and is
-findable there without having to remember which page linked to it.
+The teaching weeks are listed in order in this course's contents, with
+**Assessment** above them so the four briefs are in one place rather than
+scattered across the weeks they were set in. Reference material that does not
+belong to any one week — the terminology, the claim boundaries, the tool
+catalogue — sits under **Other course resources**, and is findable there
+without having to remember which page linked to it.

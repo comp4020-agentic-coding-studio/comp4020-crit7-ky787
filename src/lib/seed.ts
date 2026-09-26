@@ -132,7 +132,10 @@ export function seed(db: Db): void {
         const sectionRow = {
           id: sectionId(course.id, section.key),
           courseId: course.id,
-          kind: (section.week === undefined ? "info" : "week") as "info" | "week",
+          kind: (section.week === undefined ? (section.kind ?? "info") : "week") as
+            | "info"
+            | "assessment"
+            | "week",
           title: section.title,
           week: section.week ?? null,
           position: index,

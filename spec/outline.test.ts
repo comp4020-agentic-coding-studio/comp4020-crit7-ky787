@@ -95,6 +95,30 @@ describe("buildOutline", () => {
     expect(groups.map((g) => g.title)).not.toContain(FALLBACK_GROUP_TITLE);
   });
 
+  it("orders the fixed groups: information, assessment, then the weeks", () => {
+    const withAssessment = [
+      section("w02", { title: "Week 2", week: 2, position: 9 }),
+      section("assessment", { kind: "assessment", title: "Assessment", position: 0 }),
+      section("info", { kind: "info", title: "Course information", position: 0 }),
+      section("w01", { title: "Week 1", week: 1, position: 1 }),
+    ];
+    const groups = buildOutline(withAssessment, [
+      item("a", { sectionId: "w01" }),
+      item("b", { sectionId: "info" }),
+      item("c", { sectionId: "assessment" }),
+      item("d", { sectionId: "w02" }),
+      item("loose"),
+    ]);
+    // Section kind decides the group order, not the position each was given.
+    expect(groups.map((g) => g.title)).toEqual([
+      "Course information",
+      "Assessment",
+      "Week 1",
+      "Week 2",
+      FALLBACK_GROUP_TITLE,
+    ]);
+  });
+
   it("drops sections with nothing visible in them", () => {
     const groups = buildOutline(sections, [item("a", { sectionId: "w02" })]);
     expect(groups.map((g) => g.id)).toEqual(["w02"]);

@@ -2,8 +2,8 @@
 title: "A1 — Trace the transformation"
 summary: Follow one operation from C to IR to x64 across a clean/obfuscated pair you have not seen, and write down what you established and what you did not.
 kind: assessment
-section: w05
-position: 20
+section: assessment
+position: 10
 source: Reused — brief, rubric and spec lines from comp4020-ass2-Ky787 (src/content/assessments/a1-trace-the-transformation.mdx)
 ---
 
