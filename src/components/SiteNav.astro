@@ -46,8 +46,10 @@ const openCourseId = activeCourseId ?? outlines[0]?.course.id;
     <li>
       <a href={savedPath} aria-current={here(savedPath)}>
         <span>Saved</span>
-        <span class="pill" aria-hidden="true">{savedCount}</span>
-        <span class="visually-hidden">{savedCount} saved {savedCount === 1 ? "resource" : "resources"}</span>
+        <span class="pill" aria-hidden="true" data-saved-count>{savedCount}</span>
+        <span class="visually-hidden" data-saved-label>
+          {savedCount} saved {savedCount === 1 ? "resource" : "resources"}
+        </span>
       </a>
     </li>
     <li><a href={searchPath} aria-current={here(searchPath)}>Search</a></li>

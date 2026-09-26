@@ -99,3 +99,34 @@ complete LMS or a live ANU integration.
 - Respect existing permissions and report authentication/provisioning blockers.
 - After authorised deployment, verify the actual live URL and core interaction.
   Distinguish local success, CI success and verified deployed success.
+
+## Implementation decisions taken during the build
+
+These are settled. Change them deliberately, not incidentally.
+
+- `src/lib/outline.ts` is the single projection. Navigation, the contents page,
+  the resource count, previous/next and search all call `buildOutline`. Never
+  add a second list of resources, in any component, for any reason.
+- "Other course resources" is derived from `section_id IS NULL`, not seeded as
+  a row. Do not give it a row: the point is that it cannot be forgotten.
+- `isVisible` and `results.released` are the only two visibility switches, and
+  every route consults them. A new route that reads content or marks consults
+  them too.
+- A resource's address is `/c/<course>/<slug>/`. Ordering lives in `position`.
+  Never derive a URL from a position, a week number or an index.
+- Ownership of personal state comes from `Astro.locals.visitorId`, set in
+  `src/middleware.ts` from an httpOnly cookie. No endpoint accepts a visitor
+  or session id from a request body, query string or header.
+- Seeded demo dates are literals in `src/lib/seed-data.ts`. Only the current
+  teaching week is derived from the clock, and pages say it is derived and
+  fictional. Never write `Date.now()` into seed data.
+- Seeding is upsert-by-primary-key and runs at boot. It may delete a withdrawn
+  demo resource only when no save and no visit reference it.
+- Authored markdown (resource bodies, released feedback) is rendered through
+  `src/lib/markdown.ts`. Visitor text is never rendered as markdown or HTML.
+- `localStorage` and `sessionStorage` carry outline collapse state and
+  navigation scroll position, and nothing else.
+- The starter's SSE endpoint stays, filtered per session on the server. CI
+  probes it after every deploy.
+- When a page is added: add its route to `spec/routes.ts`, or the accessibility
+  and structure invariants silently stop covering it.

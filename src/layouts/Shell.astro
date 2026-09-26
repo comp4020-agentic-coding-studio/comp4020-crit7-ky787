@@ -158,6 +158,28 @@ const activePath = Astro.url.pathname;
           { passive: true },
         );
 
+        // --- the live count, over the starter's SSE stream ---------------
+        // Save something in one tab and this tab's count follows, without a
+        // reload. The stream is filtered on the server by session, so this
+        // only ever hears about the visitor's own saves. Nothing depends on
+        // it: every page renders the count from the database first.
+        const countEl = nav.querySelector("[data-saved-count]");
+        const labelEl = nav.querySelector("[data-saved-label]");
+        if (countEl && "EventSource" in window) {
+          const source = new EventSource("/api/events");
+          source.addEventListener("saves", (event) => {
+            try {
+              const { savedCount } = JSON.parse(event.data);
+              countEl.textContent = String(savedCount);
+              if (labelEl) {
+                labelEl.textContent = `${savedCount} saved ${savedCount === 1 ? "resource" : "resources"}`;
+              }
+            } catch {
+              /* a malformed frame is not worth breaking navigation over */
+            }
+          });
+        }
+
         // --- the mobile drawer -------------------------------------------
         if (!toggle) return;
         const backdrop = document.createElement("div");

@@ -319,7 +319,7 @@ h3 { font-size: 1rem; margin: 1.3rem 0 0.4rem; }
 .card .title { font-weight: 620; }
 .card .title a { text-decoration: none; }
 .card .title a:hover { text-decoration: underline; }
-.card .meta {
+.meta {
   font-size: 0.82rem;
   color: var(--ink-faint);
   margin-top: 0.15rem;
