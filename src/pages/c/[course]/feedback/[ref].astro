@@ -1,0 +1,57 @@
+---
+import Shell from "../../../../layouts/Shell.astro";
+import { getAssessment, getCourse, getReleasedResult, getVisibleItemsById } from "../../../../lib/queries";
+import { coursePath, itemPath } from "../../../../lib/paths";
+import { renderMarkdown } from "../../../../lib/markdown";
+import { formatDateTime } from "../../../../lib/term";
+
+/**
+ * Released assessment feedback, at its own URL.
+ *
+ * The point of the page: a mark and its feedback are one click from Overview,
+ * rather than behind an assignment, a submission and a separate tab. The
+ * release check is applied here and not only on the listing — an unreleased
+ * result has no page at all, which is what makes the Overview omission a
+ * guarantee rather than a rendering choice.
+ */
+const { course: courseId, ref } = Astro.params;
+const course = courseId ? getCourse(courseId) : undefined;
+const assessment = course && ref ? getAssessment(course.id, `${course.id}:${ref}`) : undefined;
+const result = assessment ? getReleasedResult(assessment.id) : undefined;
+if (!course || !assessment || !result) return Astro.rewrite("/404");
+
+const brief = getVisibleItemsById([assessment.itemId]).get(assessment.itemId);
+const feedback = await renderMarkdown(`feedback:${assessment.id}`, result.feedback);
+const percent = Math.round((result.score / assessment.maxScore) * 100);
+---
+
+<Shell
+  title={`Feedback — ${assessment.label} ${assessment.title}`}
+  description={`Released demonstration feedback for ${assessment.label} in ${course.title}.`}
+  activeCourseId={course.id}
+>
+  <p class="crumbs">
+    <a href="/">Overview</a><span class="sep">›</span>
+    <a href={coursePath(course)}>{course.title}</a><span class="sep">›</span>
+    <span>Feedback</span>
+  </p>
+
+  <h1>{assessment.label} — {assessment.title}</h1>
+  <p class="lede">
+    <span class="score">{result.score} / {assessment.maxScore} ({percent}%)</span> ·
+    worth {assessment.weight}% of {course.title}
+  </p>
+
+  <div class="toolbar">
+    {brief && <a class="btn" href={itemPath(course, brief)}>The assessment brief</a>}
+    <a class="btn" href="/">Back to Overview</a>
+    <span class="count">
+      Released {result.releasedAt ? formatDateTime(result.releasedAt) : "—"} ·
+      due {formatDateTime(assessment.dueAt)}
+    </span>
+  </div>
+
+  <p class="empty">{result.markerNote}</p>
+
+  <article class="article" set:html={feedback} />
+</Shell>

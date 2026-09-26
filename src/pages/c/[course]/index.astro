@@ -1,0 +1,126 @@
+---
+import Shell from "../../../layouts/Shell.astro";
+import Flash from "../../../components/Flash.astro";
+import { getCourse, outlineFor } from "../../../lib/queries";
+import { coursePath, itemPath } from "../../../lib/paths";
+import { demoWeek } from "../../../lib/term";
+
+/**
+ * The full contents view: the same outline the navigation shows, laid out to
+ * be read rather than scanned.
+ *
+ * Expand all and Collapse all are links, not buttons, and the server honours
+ * them. That keeps them working with no JavaScript, gives each state a URL,
+ * and makes Back and Forward do what a student expects.
+ */
+const { course: courseId } = Astro.params;
+const course = courseId ? getCourse(courseId) : undefined;
+if (!course) return Astro.rewrite("/404");
+
+const { groups, count } = outlineFor(course);
+const week = demoWeek(course);
+const currentAnchor = `w${String(week).padStart(2, "0")}`;
+const hasCurrentWeek = groups.some((group) => group.week === week);
+
+const collapsed = Astro.url.searchParams.get("groups") === "collapsed";
+const KIND_LABEL: Record<string, string> = {
+  page: "Page",
+  lecture: "Lecture",
+  practical: "Practical",
+  assessment: "Assessment",
+  reference: "Reference",
+  external: "External",
+};
+const anchorOf = (groupId: string) => groupId.split(":").at(-1) ?? groupId;
+---
+
+<Shell
+  title={`${course.title} — contents`}
+  description={`The complete ordered contents of ${course.title}: ${count} resources.`}
+  activeCourseId={course.id}
+>
+  <p class="crumbs">
+    <a href="/">Overview</a><span class="sep">›</span><span>{course.code}</span>
+  </p>
+  <h1>{course.title}</h1>
+  <p class="lede">
+    {course.subtitle}. Demonstration course, {course.termLabel} — the teaching
+    weeks and dates below are fictional.
+  </p>
+
+  <Flash />
+
+  <div class="toolbar">
+    {
+      hasCurrentWeek && (
+        <a class="btn" href={`${coursePath(course)}#${currentAnchor}`}>
+          Go to week {week}
+        </a>
+      )
+    }
+    <a class="btn" href={coursePath(course)}>Expand all</a>
+    <a class="btn" href={`${coursePath(course)}?groups=collapsed`}>Collapse all</a>
+    <span class="count">{count} resources in this course</span>
+  </div>
+
+  <p class="hint">
+    Demonstration teaching week {week} of {course.teachingWeeks}, derived from
+    this course's fixed fictional term dates. It is not the real ANU teaching
+    calendar.
+  </p>
+
+  {
+    groups.map((group) => (
+      <section
+        class={group.week === week ? "contents-group is-current" : "contents-group"}
+        id={anchorOf(group.id)}
+      >
+        <details data-group open={!collapsed}>
+          <summary>
+            <h2>
+              {group.title}
+              {group.week === week && <span class="group-note">current demonstration week</span>}
+              {group.kind === "other" && (
+                <span class="group-note">
+                  resources with no week — filed here automatically
+                </span>
+              )}
+            </h2>
+          </summary>
+          <ul class="contents-list">
+            {group.items.map((item) => (
+              <li>
+                <a href={itemPath(course, item)}>
+                  <span class="row-title">
+                    {item.title}
+                    <span class="tag">{KIND_LABEL[item.kind] ?? item.kind}</span>
+                  </span>
+                  <span class="row-summary">{item.summary}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </details>
+      </section>
+    ))
+  }
+</Shell>
+
+<style is:global>
+  .contents-group summary {
+    cursor: pointer;
+    list-style: none;
+    padding: 0.2rem 0;
+  }
+  .contents-group summary::-webkit-details-marker { display: none; }
+  .contents-group summary::before {
+    content: "▾";
+    display: inline-block;
+    width: 1rem;
+    color: var(--ink-faint);
+    font-size: 0.8rem;
+  }
+  .contents-group details:not([open]) > summary::before { content: "▸"; }
+  .contents-group summary h2 { display: inline-flex; }
+  .contents-group summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+</style>

@@ -1,53 +1,178 @@
 ---
-import { listMessages } from "../lib/db";
-import "../styles.css";
+import Shell from "../layouts/Shell.astro";
+import Flash from "../components/Flash.astro";
+import {
+  getVisibleItemsById,
+  listSaves,
+  recentVisits,
+  recentlyReleased,
+  upcomingAssessments,
+} from "../lib/queries";
+import { feedbackPath, itemPath } from "../lib/paths";
+import { formatDateTime, relativeDays } from "../lib/term";
 
-const messages = listMessages();
+/**
+ * Overview answers "what needs my attention?".
+ *
+ * It deliberately does not repeat the navigation. There is no wall of course
+ * cards here, because the courses are in the column on the left and always
+ * were; what Canvas puts behind a To Do flyout and a separate grades tab is
+ * what this page is for.
+ */
+const now = new Date();
+const visitorId = Astro.locals.visitorId;
+
+const due = upcomingAssessments(now, 5);
+const briefs = getVisibleItemsById(due.map((row) => row.assessment.itemId));
+const released = recentlyReleased(4);
+const releasedBriefs = getVisibleItemsById(released.map((row) => row.assessment.itemId));
+
+const visited = recentVisits(visitorId, 4);
+const saved = listSaves(visitorId).slice(0, 4);
+const percent = (score: number, max: number) => Math.round((score / max) * 100);
+const preview = (feedback: string) => {
+  const line = feedback
+    .split("\n")
+    .map((row) => row.trim())
+    .find((row) => row !== "" && !row.startsWith("#") && !row.startsWith("**"));
+  return line && line.length > 210 ? `${line.slice(0, 210).trimEnd()}…` : (line ?? "");
+};
 ---
 
-<!doctype html>
-<html lang="en-AU">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>COMP4020 prototype</title>
-  </head>
-  <body>
-    <nav aria-label="site">
-      <a href="/">Guestbook</a>
-      <a href="/readme/">About</a>
-    </nav>
-    <main>
-      <h1>Guestbook</h1>
-      <p>
-        A minimal full-stack starter: messages live in SQLite on the machine's
-        volume (state survives a reload and a redeploy), and new messages
-        appear in every open tab over a server-sent-events stream — open this
-        page twice and sign it in one. Replace all of this with your own
-        prototype.
-      </p>
-      <form method="post" action="/api/messages">
-        <label for="body">Leave a message</label>
-        <input id="body" name="body" required maxlength="500" />
-        <button>Sign</button>
-      </form>
-      <ul id="messages">
-        {messages.map((message) => <li>{message.body}</li>)}
-      </ul>
-    </main>
-    <script>
-      // The live half of the demo: subscribe to the SSE stream and prepend
-      // messages as they arrive. The form itself needs none of this — its
-      // POST + redirect re-renders the submitting tab from SQLite; this
-      // stream is how every other tab finds out.
-      const list = document.querySelector("#messages");
-      const source = new EventSource("/api/events");
-      source.addEventListener("message", (event) => {
-        const message = JSON.parse(event.data);
-        const item = document.createElement("li");
-        item.textContent = message.body;
-        list?.prepend(item);
-      });
-    </script>
-  </body>
-</html>
+<Shell title="Overview — Course navigator" description="Upcoming demonstration assessment, recent marks and feedback, and where you left off.">
+  <h1>Overview</h1>
+  <p class="lede">
+    What needs attention, in one place. Your courses and their full contents are
+    in the navigation, not repeated here.
+  </p>
+
+  <Flash />
+
+  <section class="panel" aria-labelledby="due-next">
+    <h2 id="due-next">Due next</h2>
+    {
+      due.length === 0 ? (
+        <p class="empty">
+          Nothing due in the demonstration data. Every assessment in this
+          prototype has a fixed fictional date, so this list empties rather than
+          quietly moving deadlines forward.
+        </p>
+      ) : (
+        <ul class="stack">
+          {due.map(({ assessment, course }) => {
+            const brief = briefs.get(assessment.itemId);
+            return (
+              <li class="card">
+                <p class="title">
+                  {brief ? (
+                    <a href={itemPath(course, brief)}>
+                      {assessment.label} — {assessment.title}
+                    </a>
+                  ) : (
+                    `${assessment.label} — ${assessment.title}`
+                  )}
+                </p>
+                <p class="meta">
+                  <span>{course.title}</span>
+                  <span>·</span>
+                  <span>{assessment.weight}% of the course</span>
+                  <span>·</span>
+                  <span>Due {formatDateTime(assessment.dueAt)}</span>
+                  <span class="due-soon">{relativeDays(assessment.dueAt, now)}</span>
+                </p>
+              </li>
+            );
+          })}
+        </ul>
+      )
+    }
+    <p class="hint">Times shown in Australia/Sydney. Demonstration dates.</p>
+  </section>
+
+  <section class="panel" aria-labelledby="recent-marks">
+    <h2 id="recent-marks">Recent marks and feedback</h2>
+    {
+      released.length === 0 ? (
+        <p class="empty">No released marks in the demonstration data yet.</p>
+      ) : (
+        <ul class="stack">
+          {released.map(({ assessment, result, course }) => {
+            const brief = releasedBriefs.get(assessment.itemId);
+            return (
+              <li class="card">
+                <p class="title">
+                  <a href={feedbackPath(course, assessment.id)}>
+                    {assessment.label} — {assessment.title}
+                  </a>
+                  <span class="score"> · {result.score} / {assessment.maxScore} ({percent(result.score, assessment.maxScore)}%)</span>
+                </p>
+                <p class="meta">
+                  <span>{course.title}</span>
+                  <span>·</span>
+                  <span>Released {result.releasedAt ? formatDateTime(result.releasedAt) : "—"}</span>
+                  {brief && (
+                    <>
+                      <span>·</span>
+                      <a href={itemPath(course, brief)}>the brief</a>
+                    </>
+                  )}
+                </p>
+                <p>{preview(result.feedback)}</p>
+                <p class="meta">
+                  <a href={feedbackPath(course, assessment.id)}>Read the full feedback</a>
+                </p>
+              </li>
+            );
+          })}
+        </ul>
+      )
+    }
+    <p class="hint">
+      Fictional marks on fictional work. Unreleased marks are not listed here and
+      have no page.
+    </p>
+  </section>
+
+  <section class="panel" aria-labelledby="continue">
+    <h2 id="continue">Continue studying</h2>
+    {
+      visited.length === 0 && saved.length === 0 ? (
+        <p class="empty">
+          Nothing opened yet in this browser session. Open a course from the
+          navigation and anything you read will appear here.
+        </p>
+      ) : (
+        <>
+          {visited.length > 0 && (
+            <>
+              <h3>Recently opened</h3>
+              <ul class="stack">
+                {visited.map(({ item, course }) => (
+                  <li class="card">
+                    <p class="title"><a href={itemPath(course, item)}>{item.title}</a></p>
+                    <p class="meta"><span>{course.title}</span></p>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+          {saved.length > 0 && (
+            <>
+              <h3>Saved for revision</h3>
+              <ul class="stack">
+                {saved.map(({ item, course, note }) => (
+                  <li class="card">
+                    <p class="title"><a href={itemPath(course, item)}>{item.title}</a></p>
+                    <p class="meta"><span>{course.title}</span></p>
+                    {note && <p class="note-display">{note}</p>}
+                  </li>
+                ))}
+              </ul>
+              <p class="meta"><a href="/saved/">All saved resources and notes</a></p>
+            </>
+          )}
+        </>
+      )
+    }
+  </section>
+</Shell>

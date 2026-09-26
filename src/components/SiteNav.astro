@@ -1,0 +1,130 @@
+---
+import Chevron from "./Chevron.astro";
+import { coursePath, itemPath, overviewPath, savedPath, searchPath } from "../lib/paths";
+import type { Outline } from "../lib/queries";
+
+/**
+ * The only navigation in the app.
+ *
+ * Canvas splits this job across a global menu, a course menu, hover flyouts
+ * and a right-hand utility column; this is one column containing all of it.
+ * Two rules keep it honest:
+ *
+ *   - Every group and every link here comes from `buildOutline`, the same
+ *     projection the contents page and search use. There is no separate
+ *     sidebar catalogue that can go stale.
+ *   - A navigation link and a disclosure control are different controls. The
+ *     course title is always a link to the course; the chevron beside it never
+ *     navigates, and says what it does through aria-expanded.
+ */
+
+type Props = {
+  outlines: Outline[];
+  activeCourseId?: string;
+  activeItemId?: string;
+  activePath?: string;
+  savedCount: number;
+};
+
+const { outlines, activeCourseId, activeItemId, activePath, savedCount } = Astro.props;
+const here = (path: string) => (activePath === path ? "page" : undefined);
+---
+
+<nav id="site-nav" class="nav" aria-label="Courses and pages" tabindex="-1">
+  <div class="drawer-head">
+    <strong id="nav-drawer-title">Navigation</strong>
+    <button type="button" class="btn" data-nav-close>Close</button>
+  </div>
+
+  <ul class="nav-primary">
+    <li><a href={overviewPath} aria-current={here(overviewPath)}>Overview</a></li>
+    <li>
+      <a href={savedPath} aria-current={here(savedPath)}>
+        <span>Saved</span>
+        <span class="pill" aria-hidden="true">{savedCount}</span>
+        <span class="visually-hidden">{savedCount} saved {savedCount === 1 ? "resource" : "resources"}</span>
+      </a>
+    </li>
+    <li><a href={searchPath} aria-current={here(searchPath)}>Search</a></li>
+  </ul>
+
+  <h2 class="nav-heading">My courses</h2>
+  <ul>
+    {
+      outlines.map(({ course, groups, count }) => {
+        const isActive = course.id === activeCourseId;
+        const panelId = `outline-${course.id}`;
+        return (
+          <li>
+            <div class="row">
+              <a
+                class="course-link"
+                href={coursePath(course)}
+                aria-current={activePath === coursePath(course) ? "page" : isActive ? "true" : undefined}
+              >
+                {course.title}
+                <span class="course-code">{course.code} · {count} resources</span>
+              </a>
+              <button
+                type="button"
+                class="disclosure"
+                aria-expanded={isActive ? "true" : "false"}
+                aria-controls={panelId}
+                data-disclosure={`course:${course.id}`}
+                data-default={isActive ? "open" : "closed"}
+              >
+                <span class="visually-hidden">Outline for {course.title}</span>
+                <Chevron />
+              </button>
+            </div>
+
+            <div class="outline" id={panelId} hidden={!isActive}>
+              <ul>
+                {groups.map((group) => {
+                  const groupPanelId = `g-${course.id}-${group.id.split(":").at(-1)}`;
+                  return (
+                    <li>
+                      <div class="row">
+                        <span class="group-title">{group.title}</span>
+                        <button
+                          type="button"
+                          class="disclosure"
+                          aria-expanded="true"
+                          aria-controls={groupPanelId}
+                          data-disclosure={`group:${group.id}`}
+                          data-default="open"
+                        >
+                          <span class="visually-hidden">{group.title} in {course.title}</span>
+                          <Chevron />
+                        </button>
+                      </div>
+                      <ul class="group-items" id={groupPanelId}>
+                        {group.items.map((item) => (
+                          <li>
+                            <a
+                              href={itemPath(course, item)}
+                              aria-current={item.id === activeItemId ? "page" : undefined}
+                            >
+                              {item.title}
+                              {item.kind === "external" && <span class="kind"> (external)</span>}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </li>
+        );
+      })
+    }
+  </ul>
+
+  <p class="nav-note">
+    Every resource this demonstration student can open is listed above, exactly
+    once. Nothing is reachable only through a link inside another page.
+  </p>
+</nav>
+<button type="button" class="backdrop" data-nav-close tabindex="-1" aria-hidden="true"></button>

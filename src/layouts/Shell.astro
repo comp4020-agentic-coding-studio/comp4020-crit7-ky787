@@ -1,0 +1,217 @@
+---
+import SiteNav from "../components/SiteNav.astro";
+import { allOutlines, countSaves } from "../lib/queries";
+import "../styles.css";
+
+type Props = {
+  title: string;
+  description?: string;
+  activeCourseId?: string;
+  activeItemId?: string;
+};
+
+const { title, description, activeCourseId, activeItemId } = Astro.props;
+
+// The layout reads the outline and the save count itself, from the
+// server-resolved session, so no page can accidentally render navigation
+// built from something else.
+const outlines = allOutlines();
+const savedCount = countSaves(Astro.locals.visitorId);
+const activePath = Astro.url.pathname;
+---
+
+<!doctype html>
+<html lang="en-AU" class="no-js">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    {description && <meta name="description" content={description} />}
+    <meta name="robots" content="noindex" />
+    <script is:inline>
+      // Progressive enhancement switch. Without JavaScript the class stays and
+      // the navigation renders in the document flow on every screen size, so
+      // nothing depends on the drawer working.
+      document.documentElement.classList.remove("no-js");
+    </script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="skip" href="#main">Skip to content</a>
+      <a class="brand" href="/">Course navigator</a>
+      <span class="prototype-tag">Unofficial student prototype · fictional course data</span>
+      <button
+        type="button"
+        class="nav-toggle"
+        id="nav-toggle"
+        aria-expanded="false"
+        aria-controls="site-nav"
+      >
+        Navigation
+      </button>
+    </header>
+
+    <div class="layout">
+      <SiteNav
+        outlines={outlines}
+        activeCourseId={activeCourseId}
+        activeItemId={activeItemId}
+        activePath={activePath}
+        savedCount={savedCount}
+      />
+      <main id="main">
+        <slot />
+      </main>
+    </div>
+
+    <footer class="site-footer">
+      <p>
+        <strong>This is a student prototype, not an ANU system.</strong> Every
+        course, resource, deadline, mark and piece of feedback here is fictional
+        demonstration data. It is not connected to Canvas, Wattle or any ANU
+        service, and it holds no real academic records.
+      </p>
+      <p>
+        Saved resources and notes belong to an anonymous browser session that
+        lasts about 180 days on this device. There is no account, so they do not
+        follow you to another browser or another machine.
+        <a href="/readme/">About this prototype</a>.
+      </p>
+    </footer>
+
+    <script is:inline>
+      (() => {
+        const nav = document.getElementById("site-nav");
+        const toggle = document.getElementById("nav-toggle");
+        if (!nav) return;
+
+        // --- outline expansion, remembered per browser -------------------
+        // A display preference, so localStorage is the right home for it.
+        // Nothing that matters is stored here: the server renders the active
+        // course expanded, and that is what a visitor with no storage gets.
+        const KEY = "outline-collapsed-v1";
+        const load = () => {
+          try {
+            return JSON.parse(localStorage.getItem(KEY) || "{}");
+          } catch {
+            return {};
+          }
+        };
+        const state = load();
+        const save = () => {
+          try {
+            localStorage.setItem(KEY, JSON.stringify(state));
+          } catch {
+            /* private mode, blocked storage: the app works without it */
+          }
+        };
+
+        const apply = (button, open) => {
+          button.setAttribute("aria-expanded", open ? "true" : "false");
+          const panel = document.getElementById(button.getAttribute("aria-controls") || "");
+          if (panel) panel.hidden = !open;
+        };
+
+        const buttons = nav.querySelectorAll("[data-disclosure]");
+        for (const button of buttons) {
+          const key = button.dataset.disclosure;
+          const remembered = state[key];
+          apply(button, remembered === undefined ? button.dataset.default === "open" : remembered);
+          button.addEventListener("click", () => {
+            const open = button.getAttribute("aria-expanded") !== "true";
+            state[key] = open;
+            apply(button, open);
+            save();
+          });
+        }
+
+        document.querySelectorAll("[data-expand-all]").forEach((button) => {
+          button.addEventListener("click", () => {
+            const open = button.dataset.expandAll === "open";
+            document
+              .querySelectorAll("details[data-group]")
+              .forEach((group) => (group.open = open));
+          });
+        });
+
+        // --- where you were in the outline -------------------------------
+        const SCROLL = "outline-scroll-v1";
+        try {
+          const at = sessionStorage.getItem(SCROLL);
+          if (at) nav.scrollTop = Number(at);
+        } catch {
+          /* ignore */
+        }
+        let pending = 0;
+        nav.addEventListener(
+          "scroll",
+          () => {
+            cancelAnimationFrame(pending);
+            pending = requestAnimationFrame(() => {
+              try {
+                sessionStorage.setItem(SCROLL, String(nav.scrollTop));
+              } catch {
+                /* ignore */
+              }
+            });
+          },
+          { passive: true },
+        );
+
+        // --- the mobile drawer -------------------------------------------
+        if (!toggle) return;
+        const backdrop = document.createElement("div");
+        backdrop.className = "backdrop";
+        document.body.appendChild(backdrop);
+
+        const focusable = () =>
+          [...nav.querySelectorAll("a[href], button:not([disabled])")].filter(
+            (el) => el.offsetParent !== null || el === document.activeElement,
+          );
+
+        const open = () => {
+          document.body.dataset.navOpen = "";
+          toggle.setAttribute("aria-expanded", "true");
+          (nav.querySelector("[data-nav-close]") || nav).focus();
+        };
+        const close = ({ restoreFocus = true } = {}) => {
+          delete document.body.dataset.navOpen;
+          toggle.setAttribute("aria-expanded", "false");
+          if (restoreFocus) toggle.focus();
+        };
+        const isOpen = () => document.body.hasAttribute("data-nav-open");
+
+        toggle.addEventListener("click", () => (isOpen() ? close() : open()));
+        backdrop.addEventListener("click", () => close());
+        for (const button of document.querySelectorAll("[data-nav-close]")) {
+          button.addEventListener("click", () => close());
+        }
+        // Following a link should leave the drawer shut and the focus with the
+        // page you asked for, not back on the menu button.
+        nav.addEventListener("click", (event) => {
+          if (isOpen() && event.target.closest("a[href]")) close({ restoreFocus: false });
+        });
+        document.addEventListener("keydown", (event) => {
+          if (!isOpen()) return;
+          if (event.key === "Escape") {
+            event.preventDefault();
+            close();
+            return;
+          }
+          if (event.key !== "Tab") return;
+          const items = focusable();
+          if (items.length === 0) return;
+          const first = items[0];
+          const last = items[items.length - 1];
+          if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+          } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>

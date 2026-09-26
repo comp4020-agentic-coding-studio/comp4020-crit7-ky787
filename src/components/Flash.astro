@@ -1,0 +1,29 @@
+---
+/**
+ * The outcome of the last write, read from a fixed key in the query string.
+ *
+ * Nothing a visitor typed is echoed back through the URL, so there is no path
+ * for markup to arrive here; and a failed write says it failed, rather than
+ * quietly redirecting to a page that looks like it worked.
+ */
+const MESSAGES: Record<string, { text: string; bad?: boolean }> = {
+  saved: { text: "Saved for revision." },
+  removed: { text: "Removed from your saved resources." },
+  "note-saved": { text: "Note saved." },
+  "note-cleared": { text: "Note cleared." },
+  "error-unknown-item": { text: "That resource could not be found, so nothing was changed.", bad: true },
+  "error-not-saved": { text: "That resource is not in your saved list, so the note was not written.", bad: true },
+  "error-note-too-long": { text: "That note is too long. Nothing was saved — shorten it and try again.", bad: true },
+  "error-bad-request": { text: "That request could not be understood, so nothing was changed.", bad: true },
+};
+
+const status = Astro.url.searchParams.get("status") ?? "";
+const message = MESSAGES[status];
+---
+{
+  message && (
+    <p class={message.bad ? "flash bad" : "flash"} role="status">
+      {message.text}
+    </p>
+  )
+}

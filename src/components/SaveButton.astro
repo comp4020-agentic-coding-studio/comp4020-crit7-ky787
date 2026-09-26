@@ -1,0 +1,19 @@
+---
+import type { Item } from "../lib/schema";
+
+/**
+ * Save for revision / remove. A plain form POST, so it works with no
+ * client-side JavaScript at all and the outcome is a real server response
+ * rather than an optimistic change of colour.
+ */
+type Props = { item: Item; saved: boolean; returnTo: string };
+const { item, saved, returnTo } = Astro.props;
+---
+<form method="post" action="/api/saves">
+  <input type="hidden" name="item" value={item.id} />
+  <input type="hidden" name="return" value={returnTo} />
+  <input type="hidden" name="action" value={saved ? "remove" : "save"} />
+  <button class={saved ? "btn" : "btn btn-primary"} data-save-button>
+    {saved ? "Remove from saved" : "Save for revision"}
+  </button>
+</form>

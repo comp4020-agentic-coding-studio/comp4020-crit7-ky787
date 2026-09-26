@@ -1,0 +1,94 @@
+---
+import Shell from "../../layouts/Shell.astro";
+import { listCourses, search } from "../../lib/queries";
+import { coursePath, itemPath, searchPath } from "../../lib/paths";
+
+/**
+ * Search supplements browsing; it does not excuse an incomplete outline.
+ *
+ * Every hit is intersected with the course outline before it is shown, so a
+ * result always arrives with the section it lives in — and nothing can turn up
+ * here that is not already in the contents page.
+ */
+const query = (Astro.url.searchParams.get("q") ?? "").slice(0, 120);
+const courseFilter = Astro.url.searchParams.get("course") ?? "";
+const courses = listCourses();
+const valid = courses.some((course) => course.id === courseFilter) ? courseFilter : "";
+const hits = query.trim().length >= 2 ? search(query, valid || undefined) : [];
+const tooShort = query.trim().length === 1;
+
+const KIND_LABEL: Record<string, string> = {
+  page: "Page",
+  lecture: "Lecture",
+  practical: "Practical",
+  assessment: "Assessment",
+  reference: "Reference",
+  external: "External",
+};
+---
+
+<Shell title="Search — Course navigator" description="Search the resources you can currently see, across both demonstration courses.">
+  <h1>Search</h1>
+  <p class="lede">
+    Searches the resources you can currently see. Unpublished material is not
+    indexed and does not appear here.
+  </p>
+
+  <form class="search-form" method="get" action={searchPath} role="search">
+    <div class="field grow">
+      <label for="q">Search resources</label>
+      <input id="q" type="search" name="q" value={query} placeholder="opaque predicate" autocomplete="off" />
+    </div>
+    <div class="field">
+      <label for="course">Course</label>
+      <select id="course" name="course">
+        <option value="">All courses</option>
+        {courses.map((course) => (
+          <option value={course.id} selected={course.id === valid}>{course.title}</option>
+        ))}
+      </select>
+    </div>
+    <button class="btn btn-primary">Search</button>
+  </form>
+
+  {
+    query.trim() === "" ? (
+      <p class="empty">
+        Type at least two characters. Try <a href={`${searchPath}?q=opaque`}>opaque</a>,
+        <a href={`${searchPath}?q=UNSAT`}> UNSAT</a> or
+        <a href={`${searchPath}?q=accumulator`}> accumulator</a>.
+      </p>
+    ) : tooShort ? (
+      <p class="empty">Searches need at least two characters.</p>
+    ) : hits.length === 0 ? (
+      <p class="empty">
+        No resource matches <strong>{query}</strong>
+        {valid ? " in that course" : ""}. Everything in these courses is listed
+        in order on each course's contents page, so browsing will not miss
+        anything that search did.
+      </p>
+    ) : (
+      <>
+        <p class="count">{hits.length} {hits.length === 1 ? "result" : "results"} for <strong>{query}</strong></p>
+        <ul class="stack">
+          {hits.map(({ item, course, group, field, snippet }) => (
+            <li class="card">
+              <p class="title">
+                <a href={itemPath(course, item)}>{item.title}</a>
+                <span class="tag">{KIND_LABEL[item.kind] ?? item.kind}</span>
+              </p>
+              <p class="meta">
+                <a href={coursePath(course)}>{course.title}</a>
+                <span>·</span>
+                <span>{group.title}</span>
+                <span>·</span>
+                <span>matched in the {field}</span>
+              </p>
+              <p>{snippet}</p>
+            </li>
+          ))}
+        </ul>
+      </>
+    )
+  }
+</Shell>

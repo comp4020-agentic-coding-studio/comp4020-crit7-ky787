@@ -1,0 +1,123 @@
+---
+import Shell from "../../../layouts/Shell.astro";
+import Flash from "../../../components/Flash.astro";
+import SaveButton from "../../../components/SaveButton.astro";
+import { getCourse, getSave, getVisibleItem, outlineFor, recordVisit } from "../../../lib/queries";
+import { groupOf, neighbours } from "../../../lib/outline";
+import { coursePath, itemPath } from "../../../lib/paths";
+import { headingsOf, renderMarkdown } from "../../../lib/markdown";
+import { NOTE_LIMIT } from "../../api/saves";
+
+const { course: courseId, item: slug } = Astro.params;
+const course = courseId ? getCourse(courseId) : undefined;
+// One visibility rule, applied here as well as in the outline: an unpublished
+// resource has no page, so a direct URL cannot reach what browsing cannot.
+const item = course && slug ? getVisibleItem(course.id, slug) : undefined;
+if (!course || !item) return Astro.rewrite("/404");
+
+const visitorId = Astro.locals.visitorId;
+recordVisit(visitorId, item.id);
+
+const { groups } = outlineFor(course);
+const group = groupOf(groups, item.id);
+const { previous, next } = neighbours(groups, item.id);
+const save = getSave(visitorId, item.id);
+const body = item.body ? await renderMarkdown(item.id, item.body) : "";
+const headings = item.body ? await headingsOf(item.body) : [];
+const here = itemPath(course, item);
+---
+
+<Shell
+  title={`${item.title} — ${course.title}`}
+  description={item.summary}
+  activeCourseId={course.id}
+  activeItemId={item.id}
+>
+  <p class="crumbs">
+    <a href="/">Overview</a><span class="sep">›</span>
+    <a href={coursePath(course)}>{course.title}</a><span class="sep">›</span>
+    <span>{group ? group.title : "Other course resources"}</span>
+  </p>
+
+  <h1>{item.title}</h1>
+  <p class="lede">{item.summary}</p>
+
+  <Flash />
+
+  <div class="toolbar">
+    <SaveButton item={item} saved={save !== undefined} returnTo={here} />
+    <a class="btn" href={`${coursePath(course)}#${(group?.id ?? "other").split(":").at(-1)}`}>
+      All of {group ? group.title : "Other course resources"}
+    </a>
+    {
+      item.externalUrl && (
+        <a class="btn" href={item.externalUrl} rel="noopener noreferrer external">
+          Open the external resource
+        </a>
+      )
+    }
+  </div>
+
+  {
+    save !== undefined && (
+      <section class="panel" aria-labelledby="note-heading">
+        <h2 id="note-heading">Your revision note</h2>
+        {save.note ? (
+          <p class="note-display">{save.note}</p>
+        ) : (
+          <p class="hint">No note on this resource yet.</p>
+        )}
+        <form class="note-form" method="post" action="/api/saves">
+          <input type="hidden" name="item" value={item.id} />
+          <input type="hidden" name="return" value={here} />
+          <input type="hidden" name="action" value="note" />
+          <label for="note">Note (private to this browser session)</label>
+          <textarea
+            id="note"
+            name="note"
+            maxlength={NOTE_LIMIT}
+            placeholder="What you want to remember about this resource."
+            >{save.note}</textarea
+          >
+          <div class="form-actions">
+            <button class="btn btn-primary">Save note</button>
+            <span class="hint">Up to {NOTE_LIMIT} characters. Submitting an empty note clears it.</span>
+          </div>
+        </form>
+      </section>
+    )
+  }
+
+  {
+    headings.length > 2 && (
+      <nav class="on-this-page" aria-label="On this page">
+        <strong>On this page</strong>
+        <ul>
+          {headings.map((heading) => (
+            <li><a href={`#${heading.slug}`}>{heading.text}</a></li>
+          ))}
+        </ul>
+      </nav>
+    )
+  }
+
+  {
+    item.externalUrl && (
+      <p class="empty">
+        This is an external resource. The course records the resource itself, not
+        every page inside it — <a href={item.externalUrl} rel="noopener noreferrer external">{item.externalUrl}</a>.
+      </p>
+    )
+  }
+
+  <article class="article" set:html={body} />
+
+  <p class="provenance">
+    <strong>Demonstration content.</strong> {item.source}
+  </p>
+
+  <nav class="pager" aria-label="Previous and next in this course">
+    {previous ? <a href={itemPath(course, previous)}>← {previous.title}</a> : <span />}
+    {next ? <a href={itemPath(course, next)}>{next.title} →</a> : <span />}
+  </nav>
+</Shell>

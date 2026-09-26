@@ -1,0 +1,78 @@
+---
+import Shell from "../../layouts/Shell.astro";
+import Flash from "../../components/Flash.astro";
+import { listSaves } from "../../lib/queries";
+import { itemPath, savedPath } from "../../lib/paths";
+import { formatDateTime } from "../../lib/term";
+import { NOTE_LIMIT } from "../api/saves";
+
+/**
+ * One visitor's saved resources and notes.
+ *
+ * Everything here is resolved from the session cookie on the server. There is
+ * no visitor id in the markup, in a form field or in the URL, so there is
+ * nothing for another visitor to substitute.
+ */
+const saved = listSaves(Astro.locals.visitorId);
+---
+
+<Shell title="Saved — Course navigator" description="Resources you saved for revision, with your private notes.">
+  <h1>Saved</h1>
+  <p class="lede">Resources you kept, and what you wanted to remember about them.</p>
+
+  <Flash />
+
+  {
+    saved.length === 0 ? (
+      <p class="empty">
+        Nothing saved yet. Open any resource from the navigation and use
+        <strong> Save for revision</strong> — it will appear here with room for a
+        note.
+      </p>
+    ) : (
+      <ul class="stack">
+        {saved.map(({ item, course, note, updatedAt }) => (
+          <li class="panel">
+            <h2><a href={itemPath(course, item)}>{item.title}</a></h2>
+            <p class="meta">
+              <span>{course.title}</span>
+              <span>·</span>
+              <span>Last changed {formatDateTime(updatedAt)}</span>
+            </p>
+            <p>{item.summary}</p>
+
+            <form class="note-form" method="post" action="/api/saves">
+              <input type="hidden" name="item" value={item.id} />
+              <input type="hidden" name="return" value={savedPath} />
+              <input type="hidden" name="action" value="note" />
+              <label for={`note-${item.id}`}>Your note</label>
+              <textarea id={`note-${item.id}`} name="note" maxlength={NOTE_LIMIT}>{note}</textarea>
+              <div class="form-actions">
+                <button class="btn btn-primary">Save note</button>
+                <span class="hint">Submit an empty note to clear it.</span>
+              </div>
+            </form>
+
+            <form method="post" action="/api/saves" class="form-actions remove-form">
+              <input type="hidden" name="item" value={item.id} />
+              <input type="hidden" name="return" value={savedPath} />
+              <input type="hidden" name="action" value="remove" />
+              <button class="btn btn-danger">Remove from saved</button>
+            </form>
+          </li>
+        ))}
+      </ul>
+    )
+  }
+
+  <p class="hint">
+    These saves live in the prototype's database on the server, tied to an
+    anonymous session cookie set in this browser. They survive a reload, a
+    restart and a redeploy. They are not an account: another browser, another
+    device or a cleared cookie starts an empty session.
+  </p>
+</Shell>
+
+<style is:global>
+  .remove-form { margin-top: 0.6rem; }
+</style>

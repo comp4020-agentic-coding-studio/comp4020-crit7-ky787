@@ -1,8 +1,8 @@
 ---
 // README.md, rendered: what this app is and what good looks like here,
 // published with the app. spec/readme.test.ts checks the whole of it is here.
+import Shell from "../layouts/Shell.astro";
 import * as readme from "../../README.md";
-import "../styles.css";
 
 const title = readme.getHeadings().find((h) => h.depth === 1)?.text ?? "README";
 
@@ -11,18 +11,12 @@ const title = readme.getHeadings().find((h) => h.depth === 1)?.text ?? "README";
 const html = (await readme.compiledContent()).replace(/(src|href)="public\//g, '$1="/');
 ---
 
-<!doctype html>
-<html lang="en-AU">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{title}</title>
-  </head>
-  <body>
-    <nav aria-label="site">
-      <a href="/">Guestbook</a>
-      <a href="/readme/">About</a>
-    </nav>
-    <main set:html={html} />
-  </body>
-</html>
+<Shell title={`${title} — Course navigator`} description="What this prototype is, and what good looks like here.">
+  <article class="article readme" set:html={html} />
+</Shell>
+
+<style is:global>
+  /* The README supplies its own h1; the rest of the app's pages put one in the
+     template, so this page lets the document's single h1 come from the file. */
+  .readme h1 { font-family: var(--ui); font-size: 1.65rem; margin-top: 0; }
+</style>

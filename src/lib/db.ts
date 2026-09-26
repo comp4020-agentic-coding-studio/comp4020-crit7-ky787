@@ -1,10 +1,9 @@
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import Database from "better-sqlite3";
-import { desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { migrate } from "drizzle-orm/better-sqlite3/migrator";
-import { type Message, messages } from "./schema";
+import { seed } from "./seed";
 
 // One SQLite file is the app's whole persistent state. In production
 // fly.toml points DATABASE_PATH at the machine's volume (/data), which is
@@ -15,6 +14,11 @@ mkdirSync(dirname(path), { recursive: true });
 
 const client = new Database(path);
 client.pragma("journal_mode = WAL");
+// Off by default in SQLite, and this schema leans on references: a save
+// cannot point at an item that does not exist, and a result cannot point at
+// a missing assessment. Enforcing that in the database beats remembering to
+// check it at every call site.
+client.pragma("foreign_keys = ON");
 
 export const db = drizzle(client);
 
@@ -24,12 +28,8 @@ export const db = drizzle(client);
 // commit the migration it writes to drizzle/.
 migrate(db, { migrationsFolder: "./drizzle" });
 
-export type { Message };
-
-export function listMessages(): Message[] {
-  return db.select().from(messages).orderBy(desc(messages.id)).limit(50).all();
-}
-
-export function addMessage(body: string): Message {
-  return db.insert(messages).values({ body }).returning().get();
-}
+// Course material is a shared demo fixture, upserted by primary key. It runs
+// on every boot and only ever writes fixture rows: saves, notes, visits and
+// visitor sessions are never read, updated or deleted here, so a restart, a
+// migration or a redeploy cannot take a visitor's work with it.
+seed(db);
