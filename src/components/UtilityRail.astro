@@ -1,0 +1,93 @@
+---
+import { getVisibleItemsById, recentlyReleased, upcomingAssessments } from "../lib/queries";
+import { feedbackPath, itemPath, overviewPath } from "../lib/paths";
+import { formatDateTime, relativeDays } from "../lib/term";
+import type { Course } from "../lib/schema";
+
+/**
+ * The right-hand rail: what is due, and what came back marked.
+ *
+ * This is the half of Canvas worth keeping. It carries **no course
+ * navigation** — no outline, no resource links beyond the brief a deadline
+ * refers to — so it does not compete with the column on the left. One place
+ * to navigate, one place to see what needs attention, and they are not the
+ * same place.
+ *
+ * It is scoped to the course you are reading, with Overview one link away for
+ * everything across both courses.
+ */
+type Props = { course: Course };
+const { course } = Astro.props;
+
+const now = new Date();
+const due = upcomingAssessments(now, 4, course.id);
+const briefs = getVisibleItemsById(due.map((row) => row.assessment.itemId));
+const marked = recentlyReleased(3, course.id);
+const percent = (score: number, max: number) => Math.round((score / max) * 100);
+---
+
+<aside class="utility" aria-label="Deadlines and marks for this course">
+  <section class="utility-panel" aria-labelledby="rail-todo">
+    <h2 id="rail-todo">To do</h2>
+    {
+      due.length === 0 ? (
+        <p class="utility-empty">
+          Nothing left to submit in {course.code}. Demonstration dates are fixed,
+          so this empties rather than rolling forward.
+        </p>
+      ) : (
+        <ul class="utility-list">
+          {due.map(({ assessment }) => {
+            const brief = briefs.get(assessment.itemId);
+            return (
+              <li>
+                {brief ? (
+                  <a href={itemPath(course, brief)}>{assessment.label} — {assessment.title}</a>
+                ) : (
+                  <span>{assessment.label} — {assessment.title}</span>
+                )}
+                <span class="utility-meta">
+                  {assessment.weight}% · due {formatDateTime(assessment.dueAt)}
+                </span>
+                <span class="utility-when">{relativeDays(assessment.dueAt, now)}</span>
+              </li>
+            );
+          })}
+        </ul>
+      )
+    }
+  </section>
+
+  <section class="utility-panel" aria-labelledby="rail-marks">
+    <h2 id="rail-marks">Recent marks</h2>
+    {
+      marked.length === 0 ? (
+        <p class="utility-empty">
+          Nothing released in {course.code} yet. Marked work that has not been
+          released does not appear here.
+        </p>
+      ) : (
+        <ul class="utility-list">
+          {marked.map(({ assessment, result }) => (
+            <li>
+              <a href={feedbackPath(course, assessment.id)}>
+                {assessment.label} — {assessment.title}
+              </a>
+              <span class="utility-score">
+                {result.score} / {assessment.maxScore} ({percent(result.score, assessment.maxScore)}%)
+              </span>
+              <span class="utility-meta">
+                released {result.releasedAt ? formatDateTime(result.releasedAt) : "—"}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+  </section>
+
+  <p class="utility-foot">
+    <a href={overviewPath}>All courses on Overview</a>
+    <span class="utility-meta">Demonstration data. Times in Australia/Sydney.</span>
+  </p>
+</aside>

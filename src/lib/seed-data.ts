@@ -73,7 +73,7 @@ export const courses: SeedCourse[] = [
     position: 1,
     sections: [
       { key: "info", title: "Course information", kind: "info" },
-      { key: "assessment", title: "Assessment", kind: "assessment" },
+      { key: "assessment", title: "Assessments", kind: "assessment" },
       ...weekSections([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
     ],
   },
@@ -90,7 +90,7 @@ export const courses: SeedCourse[] = [
     position: 2,
     sections: [
       { key: "info", title: "Course information", kind: "info" },
-      { key: "assessment", title: "Assessment", kind: "assessment" },
+      { key: "assessment", title: "Assessments", kind: "assessment" },
       ...weekSections([7, 8, 9]),
     ],
   },

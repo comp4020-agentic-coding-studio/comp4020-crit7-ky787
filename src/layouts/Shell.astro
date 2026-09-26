@@ -1,5 +1,6 @@
 ---
 import SiteNav from "../components/SiteNav.astro";
+import UtilityRail from "../components/UtilityRail.astro";
 import { allOutlines, countSaves } from "../lib/queries";
 import "../styles.css";
 
@@ -18,6 +19,10 @@ const { title, description, activeCourseId, activeItemId } = Astro.props;
 const outlines = allOutlines();
 const savedCount = countSaves(Astro.locals.visitorId);
 const activePath = Astro.url.pathname;
+
+// Course pages carry the right-hand rail; Overview does not, because there the
+// same two things are the page rather than a summary of it.
+const railCourse = outlines.find((outline) => outline.course.id === activeCourseId)?.course;
 ---
 
 <!doctype html>
@@ -51,7 +56,7 @@ const activePath = Astro.url.pathname;
       <span class="prototype-tag">Unofficial student prototype · fictional course data</span>
     </header>
 
-    <div class="layout">
+    <div class={railCourse ? "layout has-rail" : "layout"}>
       <SiteNav
         outlines={outlines}
         activeCourseId={activeCourseId}
@@ -62,6 +67,8 @@ const activePath = Astro.url.pathname;
       <main id="main">
         <slot />
       </main>
+
+      {railCourse && <UtilityRail course={railCourse} />}
 
       <footer class="site-footer">
       <p>

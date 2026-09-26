@@ -47,7 +47,11 @@ complete LMS or a live ANU integration.
   resources. It must never depend on a link inside another page to be found.
 - Give resources stable URLs. Cross-links point to those canonical resources.
 - Apply visibility rules to navigation, search and direct URL access.
-- Use one coherent navigation area, not competing global/course/right sidebars.
+- Use one coherent navigation area. The left column is the only navigation.
+  A course page also carries a right-hand utility rail, which may hold
+  deadlines and released marks and must never hold course links, an outline
+  or a search box — the original rule was against competing *navigation*, and
+  that part still stands.
 - Keep navigation links distinct from expand/collapse controls.
 - Keep recent marks and released feedback directly accessible from Overview.
 - Search supplements browsing; it does not excuse an incomplete outline.
@@ -114,6 +118,11 @@ These are settled. Change them deliberately, not incidentally.
   `position` orders within a kind, never across kinds.
 - Every assessment brief belongs to the `assessment` section, not to the week
   it was set in. A brief filed in a week is the failure the group prevents.
+  The section key stays `assessment` (it is the anchor); its title is
+  "Assessments".
+- The utility rail is scoped to the course being read and is rendered by
+  `Shell.astro` whenever `activeCourseId` is set. Overview has no rail: there,
+  the same two things are the page.
 - The footer lives in the content column of the `.layout` grid, never across
   the full page width. A full-width footer cuts the navigation column off at
   the bottom of a long page and hides the last few groups.

@@ -50,6 +50,7 @@ const preview = (feedback: string) => {
 
   <Flash />
 
+  <div class="panel-pair">
   <section class="panel" aria-labelledby="due-next">
     <h2 id="due-next">Due next</h2>
     {
@@ -76,9 +77,7 @@ const preview = (feedback: string) => {
                 </p>
                 <p class="meta">
                   <span>{course.title}</span>
-                  <span>·</span>
                   <span>{assessment.weight}% of the course</span>
-                  <span>·</span>
                   <span>Due {formatDateTime(assessment.dueAt)}</span>
                   <span class="due-soon">{relativeDays(assessment.dueAt, now)}</span>
                 </p>
@@ -110,11 +109,9 @@ const preview = (feedback: string) => {
                 </p>
                 <p class="meta">
                   <span>{course.title}</span>
-                  <span>·</span>
                   <span>Released {result.releasedAt ? formatDateTime(result.releasedAt) : "—"}</span>
                   {brief && (
                     <>
-                      <span>·</span>
                       <a href={itemPath(course, brief)}>the brief</a>
                     </>
                   )}
@@ -134,6 +131,8 @@ const preview = (feedback: string) => {
       have no page.
     </p>
   </section>
+
+  </div>
 
   <section class="panel" aria-labelledby="continue">
     <h2 id="continue">Continue studying</h2>

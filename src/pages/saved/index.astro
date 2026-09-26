@@ -36,7 +36,6 @@ const saved = listSaves(Astro.locals.visitorId);
             <h2><a href={itemPath(course, item)}>{item.title}</a></h2>
             <p class="meta">
               <span>{course.title}</span>
-              <span>·</span>
               <span>Last changed {formatDateTime(updatedAt)}</span>
             </p>
             <p>{item.summary}</p>

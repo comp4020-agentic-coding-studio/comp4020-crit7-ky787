@@ -81,7 +81,7 @@ for (const courseId of courseIds()) {
         (node) => node.textContent?.replace(/\s+/g, " ").trim() ?? "",
       );
       expect(titles[0]).toContain("Course information");
-      expect(titles[1]).toContain("Assessment");
+      expect(titles[1]).toContain("Assessments");
       expect(titles.at(-1)).toContain("Other course resources");
 
       const weeks = titles
@@ -91,11 +91,11 @@ for (const courseId of courseIds()) {
       expect(weeks.length).toBeGreaterThan(0);
     });
 
-    it("gathers every assessment brief under Assessment, in due order", () => {
+    it("gathers every assessment brief under Assessments, in due order", () => {
       const group = [...contents.querySelectorAll(".contents-group")].find((node) =>
-        node.querySelector("h2")?.textContent?.trim().startsWith("Assessment"),
+        node.querySelector("h2")?.textContent?.trim().startsWith("Assessments"),
       );
-      expect(group, "each course needs an Assessment group").toBeTruthy();
+      expect(group, "each course needs an Assessments group").toBeTruthy();
 
       const listed = [...(group?.querySelectorAll<HTMLAnchorElement>(".contents-list a") ?? [])].map(
         (a) => (a.getAttribute("href") ?? "").replace(`/c/${courseId}/`, "").replace(/\/$/, ""),
@@ -205,4 +205,68 @@ describe("publication state is applied everywhere, not just to the list", () => 
       expect(byBody).not.toContain(path);
     });
   }
+});
+
+describe("the right-hand rail carries deadlines and marks, never navigation", () => {
+  const course = "seeing-through-obfuscated-code";
+
+  it("is on a course page, and is a complementary landmark of its own", async () => {
+    const doc = await load(`/c/${course}/`);
+    const rail = doc.querySelector("aside.utility");
+    expect(rail).toBeTruthy();
+    expect(rail?.getAttribute("aria-label")).toBeTruthy();
+    // It must not sit inside main or nav, or it stops being a landmark at all.
+    expect(rail?.closest("main")).toBeNull();
+    expect(rail?.closest("nav")).toBeNull();
+  });
+
+  it("shows this course's upcoming work and released marks", async () => {
+    const doc = await load(`/c/${course}/`);
+    const rail = doc.querySelector("aside.utility");
+    expect(rail?.textContent).toContain("A2 — Recover the semantics");
+    expect(rail?.textContent).toContain("A1 — Trace the transformation");
+    expect(rail?.textContent).toContain("15.5 / 20");
+    // scoped to the course you are reading: the other course's work is not here
+    expect(rail?.textContent).not.toContain("Portfolio");
+  });
+
+  it("never leaks an unreleased mark into the rail", async () => {
+    for (const path of [`/c/${course}/`, `/c/${course}/evidence-audit/`]) {
+      const doc = await load(path);
+      const rail = doc.querySelector("aside.utility");
+      expect(rail?.textContent).not.toContain("7.5 / 10");
+      expect(rail?.textContent).not.toContain("Marked, not yet released");
+    }
+  });
+
+  it("contains no course-outline links, so it cannot compete with the navigation", async () => {
+    const doc = await load(`/c/${course}/`);
+    const rail = doc.querySelector("aside.utility");
+    const railLinks = [...(rail?.querySelectorAll<HTMLAnchorElement>("a") ?? [])].map(
+      (a) => a.getAttribute("href") ?? "",
+    );
+    const outlineLinks = new Set(
+      [...doc.querySelectorAll<HTMLAnchorElement>(".contents-list a")].map(
+        (a) => a.getAttribute("href") ?? "",
+      ),
+    );
+    // The only resource links it may carry are the briefs its deadlines name.
+    const briefs = railLinks.filter((href) => outlineLinks.has(href));
+    expect(briefs.length).toBeLessThanOrEqual(4);
+    for (const href of briefs) {
+      const title =
+        [...doc.querySelectorAll<HTMLAnchorElement>(".contents-list a")]
+          .find((a) => a.getAttribute("href") === href)
+          ?.closest(".contents-group")
+          ?.querySelector("h2")?.textContent ?? "";
+      expect(title).toContain("Assessments");
+    }
+  });
+
+  it("is absent from Overview, where the same two things are the page", async () => {
+    for (const path of ["/", "/saved/", "/search/"]) {
+      const doc = await load(path);
+      expect(doc.querySelector("aside.utility"), `${path} should have no rail`).toBeNull();
+    }
+  });
 });

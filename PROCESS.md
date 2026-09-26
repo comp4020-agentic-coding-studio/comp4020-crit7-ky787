@@ -10,7 +10,9 @@ Course navigator: a replacement for course navigation in Canvas, built using Ast
 
 I used ChatGPT to generate an initial prompt for Claude which resulted in a website that had all important course information on the left sidebar similar to how Wattle used to be. After generating the initial website I had claude put emphasis on parts of a course info website that I find important as a student such as making Assessment infomation and all course pages acessible on the left sidebar. 
 
-### 
+### Added some elements of Canvas that are actually good
+
+Some parts of canvas such as the "To-Do" and "Recent Feedback" are good because they present the user with useful information easliy, this was kept in the new design while fixing issues of the old by displaying all pages in the left sidebar. Additionally, I prompted claude to use more whitespace to fill out the page more which is another element canvas gets right.
 
 ## The record
 

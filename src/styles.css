@@ -17,6 +17,7 @@
   --warn-soft: #fbf2e4;
   --focus: #b45309;
   --rail-width: 20.5rem;
+  --utility-width: 19.5rem;
   --ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --read: Georgia, "Iowan Old Style", "Times New Roman", serif;
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
@@ -134,6 +135,17 @@ a:hover { text-decoration-thickness: 2px; }
 .nav { grid-area: nav; }
 main { grid-area: main; }
 .site-footer { grid-area: footer; }
+.utility { grid-area: rail; }
+
+/* Course pages add a third column. It is a utility rail, not a second
+   navigation: deadlines and marks only, never course links. One place to
+   navigate, one place to see what needs attention, and they stay apart. */
+.layout.has-rail {
+  grid-template-columns: var(--rail-width) minmax(0, 1fr) var(--utility-width);
+  grid-template-areas:
+    "nav main rail"
+    "nav footer rail";
+}
 
 /* --- navigation ----------------------------------------------------------- */
 
@@ -286,7 +298,9 @@ main { grid-area: main; }
 main {
   min-width: 0;
   padding: 1.75rem 2rem 4rem;
-  max-width: 56rem;
+  /* Wide enough to use the page, capped so a very large monitor doesn't
+     stretch a list of links across a metre of glass. */
+  max-width: 78rem;
 }
 
 h1 {
@@ -308,7 +322,7 @@ h1 {
   font-size: 1.02rem;
   color: var(--ink-soft);
   margin: 0 0 1.4rem;
-  max-width: 44rem;
+  max-width: 46rem;
 }
 
 .panel {
@@ -324,6 +338,17 @@ h2 { font-size: 1.14rem; margin: 1.8rem 0 0.6rem; letter-spacing: -0.01em; }
 h3 { font-size: 1rem; margin: 1.3rem 0 0.4rem; }
 
 .stack { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.55rem; }
+
+/* Overview has no rail — the two things a rail would carry are the page. So
+   it uses the width it has instead, side by side once there is room. */
+.panel-pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(25rem, 1fr));
+  gap: 1rem;
+  align-items: start;
+  margin-block: 1.1rem;
+}
+.panel-pair > .panel { margin-block: 0; height: 100%; }
 
 .card {
   border: 1px solid var(--line-soft);
@@ -341,6 +366,13 @@ h3 { font-size: 1rem; margin: 1.3rem 0 0.4rem; }
   display: flex;
   flex-wrap: wrap;
   gap: 0.15rem 0.6rem;
+}
+/* The separator is drawn, not written, so a line that wraps never ends on a
+   stray dot. */
+.meta > :not(:last-child)::after {
+  content: "·";
+  margin-inline-start: 0.6rem;
+  color: var(--line);
 }
 .card p { margin: 0.45rem 0 0; font-size: 0.92rem; color: var(--ink-soft); }
 
@@ -407,7 +439,7 @@ h3 { font-size: 1rem; margin: 1.3rem 0 0.4rem; }
 .btn-danger { color: #8a2222; border-color: #e0c0c0; }
 .btn-danger:hover { background: #fbeeee; }
 
-.contents-group { margin-block: 1.6rem; scroll-margin-top: 4rem; }
+.contents-group { margin-block: 1.25rem; scroll-margin-top: 4rem; }
 .contents-group h2 {
   margin: 0 0 0.1rem;
   display: inline-flex;
@@ -450,7 +482,7 @@ h3 { font-size: 1rem; margin: 1.3rem 0 0.4rem; }
   font-family: var(--read);
   font-size: 1.035rem;
   line-height: 1.68;
-  max-width: 42rem;
+  max-width: 46rem;
 }
 .article h2 { font-family: var(--ui); font-size: 1.1rem; margin-top: 2rem; scroll-margin-top: 4rem; }
 .article h3 { font-family: var(--ui); }
@@ -507,7 +539,7 @@ h3 { font-size: 1rem; margin: 1.3rem 0 0.4rem; }
   padding: 0.6rem 0.9rem;
   margin-block: 1.2rem;
   font-size: 0.88rem;
-  max-width: 42rem;
+  max-width: 46rem;
 }
 .on-this-page > strong { display: block; margin-bottom: 0.3rem; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-faint); }
 .on-this-page ul { list-style: none; margin: 0; padding: 0; columns: 2; column-gap: 1.5rem; }
@@ -519,7 +551,7 @@ h3 { font-size: 1rem; margin: 1.3rem 0 0.4rem; }
   border-top: 1px solid var(--line);
   font-size: 0.82rem;
   color: var(--ink-faint);
-  max-width: 42rem;
+  max-width: 46rem;
 }
 
 .pager {
@@ -531,7 +563,7 @@ h3 { font-size: 1rem; margin: 1.3rem 0 0.4rem; }
   padding-top: 1rem;
   border-top: 1px solid var(--line);
   font-size: 0.9rem;
-  max-width: 42rem;
+  max-width: 46rem;
 }
 
 /* --- forms ---------------------------------------------------------------- */
@@ -571,6 +603,66 @@ textarea { min-height: 5.5rem; resize: vertical; font-family: var(--ui); }
 
 mark { background: #fff0b3; color: inherit; padding: 0 0.1em; }
 
+/* --- the utility rail ----------------------------------------------------- */
+
+.utility {
+  align-self: stretch;
+  position: sticky;
+  top: 3rem;
+  max-height: calc(100vh - 3rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-left: 1px solid var(--line);
+  padding: 1.5rem 1.25rem 2.5rem;
+  font-size: 0.88rem;
+}
+
+.utility-panel { margin-bottom: 1.5rem; }
+.utility-panel h2 {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--ink-faint);
+  font-weight: 650;
+  margin: 0 0 0.5rem;
+}
+
+.utility-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.7rem; }
+.utility-list li {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.55rem 0.7rem;
+  background: var(--surface);
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+  line-height: 1.35;
+}
+.utility-list a { font-weight: 600; text-decoration: none; }
+.utility-list a:hover { text-decoration: underline; }
+.utility-meta { font-size: 0.78rem; color: var(--ink-faint); }
+.utility-when { font-size: 0.78rem; font-weight: 600; color: var(--warn); }
+.utility-score {
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+  color: var(--accent);
+}
+.utility-empty {
+  margin: 0;
+  padding: 0.55rem 0.7rem;
+  border: 1px dashed var(--line);
+  border-radius: 6px;
+  color: var(--ink-soft);
+  font-size: 0.83rem;
+}
+.utility-foot {
+  margin: 0;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.82rem;
+}
+
 /* --- footer --------------------------------------------------------------- */
 
 .site-footer {
@@ -585,6 +677,29 @@ mark { background: #fff0b3; color: inherit; padding: 0 0.1em; }
 
 /* --- narrow screens ------------------------------------------------------- */
 
+/* Two columns plus a rail needs about 78rem. Below that the rail moves under
+   the content rather than squeezing the thing people came to read: at 1000px
+   a third column leaves the article about 360px wide, which is unreadable. */
+@media (max-width: 78rem) {
+  .layout.has-rail {
+    grid-template-columns: var(--rail-width) minmax(0, 1fr);
+    grid-template-areas:
+      "nav main"
+      "nav rail"
+      "nav footer";
+    grid-template-rows: 1fr auto auto;
+  }
+  .utility {
+    position: static;
+    max-height: none;
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    padding: 1.25rem 2rem 1.5rem;
+  }
+  .utility-panel { margin-bottom: 1rem; }
+  .utility-list { grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); }
+}
+
 @media (max-width: 62rem) {
   .layout {
     grid-template-columns: minmax(0, 1fr);
@@ -594,6 +709,16 @@ mark { background: #fff0b3; color: inherit; padding: 0 0.1em; }
       "footer";
     grid-template-rows: auto 1fr auto;
   }
+  .layout.has-rail {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "nav"
+      "main"
+      "rail"
+      "footer";
+    grid-template-rows: auto 1fr auto auto;
+  }
+  .utility { padding-inline: 1rem; }
   main { padding: 1.25rem 1rem 3rem; }
   .site-footer { padding-inline: 1rem; }
   .nav-toggle { display: block; order: 2; }

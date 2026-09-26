@@ -98,7 +98,7 @@ describe("buildOutline", () => {
   it("orders the fixed groups: information, assessment, then the weeks", () => {
     const withAssessment = [
       section("w02", { title: "Week 2", week: 2, position: 9 }),
-      section("assessment", { kind: "assessment", title: "Assessment", position: 0 }),
+      section("assessment", { kind: "assessment", title: "Assessments", position: 0 }),
       section("info", { kind: "info", title: "Course information", position: 0 }),
       section("w01", { title: "Week 1", week: 1, position: 1 }),
     ];
@@ -112,7 +112,7 @@ describe("buildOutline", () => {
     // Section kind decides the group order, not the position each was given.
     expect(groups.map((g) => g.title)).toEqual([
       "Course information",
-      "Assessment",
+      "Assessments",
       "Week 1",
       "Week 2",
       FALLBACK_GROUP_TITLE,

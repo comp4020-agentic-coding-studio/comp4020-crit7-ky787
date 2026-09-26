@@ -55,10 +55,17 @@ an unpublished resource is not merely hidden from a list — it has no page.
 Released feedback works the same way: an unreleased mark is in the database and
 reachable from nowhere.
 
-**Assessment in one place.** Every brief is filed under an *Assessment* group
+**Assessment in one place.** Every brief is filed under an *Assessments* group
 rather than in the teaching week it was set in, so finding what you are marked
 on does not depend on remembering which week that was. It is an ordinary
 section kind, ordered by the same rule as the rest of the outline.
+
+**One navigation, and a rail that is not one.** Canvas's right-hand To Do and
+feedback column is the part worth keeping, so a course page has one: what is
+due in this course, and what has come back marked. It carries no outline, no
+search and no course links beyond the briefs its own deadlines name, which is
+what keeps it a utility rail rather than a second place to look for material.
+Overview has no rail, because there those two things are the page.
 
 **URLs that survive being reorganised.** A resource lives at
 `/c/<course>/<slug>/`. Reordering changes a `position` column; it never touches
@@ -93,10 +100,13 @@ Enforced by `spec/`:
 
 - the outline lists exactly the visible content records, by identifier and not
   by count, with no duplicates — and the navigation agrees with it;
-- the groups come in a fixed order — Course information, Assessment, the
+- the groups come in a fixed order — Course information, Assessments, the
   teaching weeks in order, then *Other course resources* last;
 - every sectionless resource appears in *Other course resources*, and every
-  assessment brief appears under *Assessment*, in the order it falls due;
+  assessment brief appears under *Assessments*, in the order it falls due;
+- the right-hand rail is a complementary landmark carrying no course-outline
+  links beyond the briefs its own deadlines name, and it never shows an
+  unreleased mark;
 - reordering changes order and nothing else, including URLs;
 - an item whose section has moved away is not orphaned;
 - unpublished resources and unreleased feedback are absent from the outline,

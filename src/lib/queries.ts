@@ -94,25 +94,35 @@ export function getReleasedResult(assessmentId: string): Result | undefined {
   return row && row.released === 1 ? row : undefined;
 }
 
-export function upcomingAssessments(now: Date, limit = 5): { assessment: Assessment; course: Course }[] {
+/** Upcoming demonstration deadlines. Pass a course to scope it to that course,
+ *  which is what the right-hand rail on a course page shows. */
+export function upcomingAssessments(
+  now: Date,
+  limit = 5,
+  courseId?: string,
+): { assessment: Assessment; course: Course }[] {
   const at = now.toISOString();
+  const due = sql`${assessments.dueAt} >= ${at}`;
   return db
     .select({ assessment: assessments, course: courses })
     .from(assessments)
     .innerJoin(courses, eq(courses.id, assessments.courseId))
-    .where(sql`${assessments.dueAt} >= ${at}`)
+    .where(courseId ? and(eq(assessments.courseId, courseId), due) : due)
     .orderBy(asc(assessments.dueAt))
     .limit(limit)
     .all();
 }
 
-export function recentlyReleased(limit = 5): MarkedAssessment[] {
+/** Released results only, newest first. An unreleased mark has no route and no
+ *  listing, here or anywhere else. */
+export function recentlyReleased(limit = 5, courseId?: string): MarkedAssessment[] {
+  const released = eq(results.released, 1);
   return db
     .select({ assessment: assessments, result: results, course: courses })
     .from(results)
     .innerJoin(assessments, eq(assessments.id, results.assessmentId))
     .innerJoin(courses, eq(courses.id, assessments.courseId))
-    .where(eq(results.released, 1))
+    .where(courseId ? and(eq(assessments.courseId, courseId), released) : released)
     .orderBy(desc(results.releasedAt))
     .limit(limit)
     .all();
